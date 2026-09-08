@@ -205,6 +205,7 @@ define([
             // Claim the label immediately so local_dixeo status pills never flash.
             Str.getString('generating_status', 'filter_dixeo_imageeditor').then((label) => {
                 setGeneratingOverlay(wrap, true, label);
+                return;
             }).catch(() => {
                 setGeneratingOverlay(wrap, true, '');
             });
