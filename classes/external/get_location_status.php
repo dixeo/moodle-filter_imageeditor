@@ -89,7 +89,15 @@ final class get_location_status extends external_api {
             && in_array($job->status, [job_repository::STATUS_PENDING, job_repository::STATUS_PROCESSING], true)
         ) {
             $remotejobid = trim((string) ($job->jobid ?? ''));
-            if ($remotejobid !== '') {
+            // Batch shortcode jobs are polled by adhoc tasks. Client-side remote
+            // polls for every pending wrap flood the API key concurrency limit.
+            // Modal (single-image) keeps an eager client poll for snappier UX.
+            $origindeferstoremote = in_array(
+                (string) ($job->origin ?? ''),
+                [job_repository::ORIGIN_SHORTCODE, job_repository::ORIGIN_STRUCTURE],
+                true
+            );
+            if ($remotejobid !== '' && !$origindeferstoremote) {
                 client_poll::poll_once(
                     $remotejobid,
                     $target,

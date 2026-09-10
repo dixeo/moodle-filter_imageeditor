@@ -79,15 +79,23 @@ define([], function() {
      * @param {HTMLElement} wrap
      * @param {string} imageurl
      * @param {string} [contenthash]
+     * @param {Object} [options]
+     * @param {boolean} [options.failed=false] Keep/set the failed class instead of clearing it.
      */
-    const applyImageToWrap = (wrap, imageurl, contenthash = '') => {
+    const applyImageToWrap = (wrap, imageurl, contenthash = '', options = {}) => {
         const img = wrap.querySelector('img');
         if (!(img instanceof HTMLImageElement) || !imageurl) {
             return;
         }
         const hash = contenthash || wrap.dataset.contenthash || '';
+        const failed = !!options.failed;
         img.src = appendImageRev(imageurl, hash);
-        img.classList.remove('dixeo-img-gen-pending', 'dixeo-img-gen-failed');
+        img.classList.remove('dixeo-img-gen-pending');
+        if (failed) {
+            img.classList.add('dixeo-img-gen-failed');
+        } else {
+            img.classList.remove('dixeo-img-gen-failed');
+        }
         if (hash) {
             wrap.dataset.contenthash = hash;
             img.setAttribute('data-dixeo-contenthash', hash);

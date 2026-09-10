@@ -42,6 +42,46 @@ define([
     const pollStartedAt = new Map();
 
     /**
+     * Refresh pending/failed status pills after class changes on a wrap.
+     *
+     * @param {HTMLElement} wrap
+     */
+    const refreshContentImageHost = (wrap) => {
+        require(['local_dixeo/content_image_pending'], (pending) => {
+            pending.refresh(wrap);
+        }, () => {
+            // Optional host module may be unavailable on some pages.
+        });
+    };
+
+    /**
+     * Apply a terminal status payload to the wrap image.
+     *
+     * @param {HTMLElement} wrap
+     * @param {Object} status
+     */
+    const applyTerminalStatus = (wrap, status) => {
+        const imageurl = status.imageurl || '';
+        const hash = status.current_contenthash || '';
+        if (!imageurl) {
+            // Still clear pending class so shimmer stops even without a URL.
+            const img = wrap.querySelector('img');
+            if (img instanceof HTMLImageElement) {
+                img.classList.remove('dixeo-img-gen-pending');
+                if (status.status === 'failed') {
+                    img.classList.add('dixeo-img-gen-failed');
+                }
+            }
+            refreshContentImageHost(wrap);
+            return;
+        }
+        imageSync.applyImageToWrap(wrap, imageurl, hash, {
+            failed: status.status === 'failed',
+        });
+        refreshContentImageHost(wrap);
+    };
+
+    /**
      * Toggle generating overlay on a wrapper.
      *
      * @param {HTMLElement} wrap
@@ -154,7 +194,7 @@ define([
                 stopPolling(key);
 
                 if (status.status === 'applied') {
-                    imageSync.applyImageToWrap(wrap, status.imageurl || '', status.current_contenthash || '');
+                    applyTerminalStatus(wrap, status);
                     setGeneratingOverlay(wrap, false);
                     await notifyJobResult(wrap, 'success');
                     if (callbacks.onApplied) {
@@ -165,6 +205,7 @@ define([
                 }
 
                 if (status.status === 'failed') {
+                    applyTerminalStatus(wrap, status);
                     setGeneratingOverlay(wrap, false);
                     const message = status.errormessage
                         || await Str.getString('error_job_failed', 'filter_dixeo_imageeditor');
@@ -174,15 +215,19 @@ define([
                     }
                     acknowledgeTerminalStatus(wrap);
                 }
-            } catch (error) {
-                Notification.exception(error);
+            } catch {
+                // Transient webservice/API errors: keep polling; do not open N error modals.
             }
         };
 
         pollTimers.set(key, window.setInterval(() => {
-            poll().catch(Notification.exception);
+            poll().catch(() => {
+                // Keep interval alive on unexpected rejections.
+            });
         }, POLL_INTERVAL_MS));
-        poll().catch(Notification.exception);
+        poll().catch(() => {
+            // First tick soft-fail.
+        });
     };
 
     /**
@@ -220,6 +265,9 @@ define([
                     if (status?.status === 'pending' || status?.status === 'processing') {
                         startStatusPolling(wrap);
                     } else {
+                        if (status?.status === 'applied' || status?.status === 'failed') {
+                            applyTerminalStatus(wrap, status);
+                        }
                         setGeneratingOverlay(wrap, false);
                     }
                 } catch {
