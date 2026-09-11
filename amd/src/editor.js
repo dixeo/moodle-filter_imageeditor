@@ -288,6 +288,18 @@ const buildHistoryCarouselContext = (context, history, currentContenthash) => ({
 });
 
 /**
+ * Remove every history wrapper under the modal root (clears races/duplicates).
+ *
+ * @param {HTMLElement} root
+ */
+const removeHistoryWrappers = (root) => {
+    root.querySelectorAll('[data-region="history-wrapper"]').forEach((el) => el.remove());
+};
+
+/** @type {WeakMap<HTMLElement, Promise<void>>} */
+const historyRefreshTail = new WeakMap();
+
+/**
  * Re-render or remove the history carousel after a history change.
  *
  * @param {HTMLElement} root
@@ -296,24 +308,28 @@ const buildHistoryCarouselContext = (context, history, currentContenthash) => ({
  * @param {string} [currentContenthash]
  * @returns {Promise<void>}
  */
-const refreshHistorySection = async(root, context, history, currentContenthash) => {
-    const wrapper = root.querySelector('[data-region="history-wrapper"]');
-    if (!history.length) {
-        wrapper?.remove();
-        return;
-    }
-    const hash = currentContenthash || context.current_contenthash || '';
-    const sectionContext = buildHistoryCarouselContext(context, history, hash);
-    const {html, js} = await Templates.renderForPromise('filter_dixeo_imageeditor/history_section', sectionContext);
-    if (wrapper) {
-        wrapper.outerHTML = html;
-    } else {
+const refreshHistorySection = (root, context, history, currentContenthash) => {
+    const run = async() => {
+        if (!history.length) {
+            removeHistoryWrappers(root);
+            return;
+        }
+        const hash = currentContenthash || context.current_contenthash || '';
+        const sectionContext = buildHistoryCarouselContext(context, history, hash);
+        const {html, js} = await Templates.renderForPromise('filter_dixeo_imageeditor/history_section', sectionContext);
+        // Re-query after await so any wrappers added while rendering are replaced, not stacked.
+        removeHistoryWrappers(root);
         const modalRoot = root.querySelector('[data-region="modal-root"]') || root;
         modalRoot.insertAdjacentHTML('beforeend', html);
-    }
-    if (js) {
-        Templates.runTemplateJS(js);
-    }
+        if (js) {
+            Templates.runTemplateJS(js);
+        }
+    };
+
+    const previous = historyRefreshTail.get(root) || Promise.resolve();
+    const next = previous.catch(() => undefined).then(run);
+    historyRefreshTail.set(root, next);
+    return next;
 };
 
 /**
