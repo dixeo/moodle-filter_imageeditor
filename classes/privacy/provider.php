@@ -33,7 +33,7 @@ use core_privacy\local\request\userlist;
 use core_privacy\local\request\writer;
 
 /**
- * Privacy provider for version history metadata.
+ * Privacy provider for version history metadata and archived history files.
  *
  * @package    filter_dixeo_imageeditor
  * @copyright  2026 Dixeo
@@ -117,7 +117,10 @@ class provider implements
     }
 
     /**
-     * Export version history data for approved contexts.
+     * Export version history data and archived history files for approved contexts.
+     *
+     * History binaries live in the system context file area keyed by version id;
+     * they are attached to the content context export where the version row lives.
      *
      * @param approved_contextlist $contextlist
      */
@@ -125,6 +128,9 @@ class provider implements
         global $DB;
 
         $userid = $contextlist->get_user()->id;
+        $fs = get_file_storage();
+        $systemcontext = \context_system::instance();
+        $versionsubcontext = [get_string('privacy:pathversions', 'filter_dixeo_imageeditor')];
 
         foreach ($contextlist as $context) {
             $versions = $DB->get_records('filter_dixeo_imageeditor_version', [
@@ -132,20 +138,33 @@ class provider implements
                 'usermodified' => $userid,
             ], 'timecreated ASC');
 
-            if (!empty($versions)) {
-                $exportversions = [];
-                foreach ($versions as $version) {
-                    $exportversions[] = (object) [
-                        'filename' => $version->filename,
-                        'source' => $version->source,
-                        'timecreated' => transform::datetime($version->timecreated),
-                    ];
-                }
-                writer::with_context($context)->export_data(
-                    [get_string('privacy:pathversions', 'filter_dixeo_imageeditor')],
-                    (object) ['versions' => $exportversions]
-                );
+            if (empty($versions)) {
+                continue;
             }
+
+            $exportversions = [];
+            $writer = writer::with_context($context);
+            foreach ($versions as $version) {
+                $exportversions[] = (object) [
+                    'filename' => $version->filename,
+                    'source' => $version->source,
+                    'timecreated' => transform::datetime($version->timecreated),
+                ];
+
+                $historyfiles = $fs->get_area_files(
+                    $systemcontext->id,
+                    'filter_dixeo_imageeditor',
+                    'history',
+                    (int) $version->id,
+                    'itemid, filepath, filename',
+                    false
+                );
+                foreach ($historyfiles as $file) {
+                    $writer->export_file($versionsubcontext, $file);
+                }
+            }
+
+            $writer->export_data($versionsubcontext, (object) ['versions' => $exportversions]);
         }
     }
 
