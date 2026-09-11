@@ -89,7 +89,7 @@ final class apply_manual_edit extends external_api {
         }
 
         $binary = image_util::decode_image_base64((string) $params['image_base64']);
-        image_util::assert_valid_web_image($binary, (int) $params['courseid'], 'error_manual_invalid_image');
+        image_util::assert_valid_web_image($binary, $location->courseid, 'error_manual_invalid_image');
 
         file_replacer::apply_binary($location, $binary, (int) $USER->id, file_replacer::SOURCE_MANUAL);
 

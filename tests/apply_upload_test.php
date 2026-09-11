@@ -198,4 +198,35 @@ final class apply_upload_test extends \advanced_testcase {
             $this->assertSame('error_upload_blocked', $e->errorcode);
         }
     }
+
+    public function test_apply_upload_uses_location_course_for_size_limit(): void {
+        global $DB;
+
+        [$location, $courseid] = $this->create_page_image_location();
+        $png = self::fixture_png_bytes();
+        $DB->set_field('course', 'maxbytes', strlen($png) - 1, ['id' => $courseid]);
+
+        // Client-supplied course with a larger limit must not relax the check.
+        $othercourse = $this->getDataGenerator()->create_course(['maxbytes' => max(10485760, strlen($png) * 10)]);
+        $teacher = $this->getDataGenerator()->create_and_enrol(get_course($courseid), 'editingteacher');
+        $this->getDataGenerator()->enrol_user($teacher->id, $othercourse->id, 'editingteacher');
+        $this->setUser($teacher);
+
+        try {
+            apply_upload::execute(
+                $location->contextid,
+                $location->component,
+                $location->filearea,
+                $location->itemid,
+                $location->filepath,
+                $location->filename,
+                (int) $othercourse->id,
+                base64_encode($png)
+            );
+            $this->fail('Expected moodle_exception');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('uploadfilelimitexceeded', $e->errorcode);
+            $this->assertSame('error', $e->module);
+        }
+    }
 }

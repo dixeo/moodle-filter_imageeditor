@@ -89,7 +89,7 @@ final class apply_upload extends external_api {
         }
 
         $binary = image_util::decode_image_base64((string) $params['image_base64']);
-        image_util::assert_valid_web_image($binary, (int) $params['courseid']);
+        image_util::assert_valid_web_image($binary, $location->courseid);
 
         file_replacer::apply_binary($location, $binary, (int) $USER->id, file_replacer::SOURCE_UPLOAD);
 
