@@ -126,6 +126,81 @@ final class file_replacer_test extends \advanced_testcase {
         $this->assertSame($originalhash, $version->contenthash);
     }
 
+    public function test_apply_binary_rejects_svg(): void {
+        global $USER, $DB;
+
+        [$location] = $this->create_page_image_location();
+        $originalhash = $location->get_stored_file()->get_contenthash();
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">'
+            . '<script>alert(1)</script><rect width="10" height="10"/></svg>';
+
+        try {
+            file_replacer::apply_binary(
+                $location,
+                $svg,
+                (int) $USER->id,
+                file_replacer::SOURCE_GENERATED
+            );
+            $this->fail('Expected moodle_exception');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('error_upload_invalid_image', $e->errorcode);
+        }
+
+        $this->assertSame($originalhash, $location->get_stored_file()->get_contenthash());
+        $this->assertCount(0, $DB->get_records('filter_dixeo_imageeditor_version', [
+            'locationhash' => $location->hash(),
+        ]));
+    }
+
+    public function test_apply_binary_rejects_non_image(): void {
+        global $USER, $DB;
+
+        [$location] = $this->create_page_image_location();
+        $originalhash = $location->get_stored_file()->get_contenthash();
+
+        try {
+            file_replacer::apply_binary(
+                $location,
+                'not-an-image-payload',
+                (int) $USER->id,
+                file_replacer::SOURCE_GENERATED
+            );
+            $this->fail('Expected moodle_exception');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('error_upload_invalid_image', $e->errorcode);
+        }
+
+        $this->assertSame($originalhash, $location->get_stored_file()->get_contenthash());
+        $this->assertCount(0, $DB->get_records('filter_dixeo_imageeditor_version', [
+            'locationhash' => $location->hash(),
+        ]));
+    }
+
+    public function test_apply_job_result_rejects_svg_payload(): void {
+        global $USER, $DB;
+
+        [$location] = $this->create_page_image_location();
+        $originalhash = $location->get_stored_file()->get_contenthash();
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>';
+
+        try {
+            file_replacer::apply_job_result(
+                $location,
+                ['image_base64' => base64_encode($svg)],
+                (int) $USER->id,
+                file_replacer::SOURCE_GENERATED
+            );
+            $this->fail('Expected moodle_exception');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('error_upload_invalid_image', $e->errorcode);
+        }
+
+        $this->assertSame($originalhash, $location->get_stored_file()->get_contenthash());
+        $this->assertCount(0, $DB->get_records('filter_dixeo_imageeditor_version', [
+            'locationhash' => $location->hash(),
+        ]));
+    }
+
     public function test_revert_restores_archived_bytes(): void {
         global $USER, $DB;
 

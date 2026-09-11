@@ -70,10 +70,26 @@ final class image_util_test extends \advanced_testcase {
         image_util::assert_valid_web_image(self::fixture_jpeg_bytes(), $this->courseid);
     }
 
+    public function test_assert_valid_web_image_content_accepts_png_and_jpeg(): void {
+        image_util::assert_valid_web_image_content(self::fixture_png_bytes());
+        image_util::assert_valid_web_image_content(self::fixture_jpeg_bytes());
+    }
+
     public function test_assert_valid_web_image_rejects_svg(): void {
         $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10"/></svg>';
         try {
             image_util::assert_valid_web_image($svg, $this->courseid);
+            $this->fail('Expected moodle_exception');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('error_upload_invalid_image', $e->errorcode);
+        }
+    }
+
+    public function test_assert_valid_web_image_content_rejects_svg(): void {
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">'
+            . '<script>alert(1)</script><rect width="10" height="10"/></svg>';
+        try {
+            image_util::assert_valid_web_image_content($svg);
             $this->fail('Expected moodle_exception');
         } catch (\moodle_exception $e) {
             $this->assertSame('error_upload_invalid_image', $e->errorcode);
@@ -98,6 +114,15 @@ final class image_util_test extends \advanced_testcase {
     public function test_assert_valid_web_image_rejects_non_web_image(): void {
         try {
             image_util::assert_valid_web_image('plain text', $this->courseid);
+            $this->fail('Expected moodle_exception');
+        } catch (\moodle_exception $e) {
+            $this->assertSame('error_upload_invalid_image', $e->errorcode);
+        }
+    }
+
+    public function test_assert_valid_web_image_content_rejects_non_web_image(): void {
+        try {
+            image_util::assert_valid_web_image_content('plain text');
             $this->fail('Expected moodle_exception');
         } catch (\moodle_exception $e) {
             $this->assertSame('error_upload_invalid_image', $e->errorcode);

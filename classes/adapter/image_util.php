@@ -57,7 +57,40 @@ final class image_util {
     }
 
     /**
-     * Validate image bytes against Moodle web_image types.
+     * Validate image bytes for content type only (no upload size limit).
+     *
+     * Used by all apply paths including AI job results. Rejects SVG because it
+     * can embed scripts and the edit capability only declares RISK_SPAM.
+     *
+     * @param string $binary
+     * @param string $errorstring Language string key when validation fails.
+     * @return void
+     */
+    public static function assert_valid_web_image_content(
+        string $binary,
+        string $errorstring = 'error_upload_invalid_image'
+    ): void {
+        if ($binary === '') {
+            throw new \moodle_exception($errorstring, 'filter_dixeo_imageeditor');
+        }
+
+        $finfo = new \finfo(FILEINFO_MIME_TYPE);
+        $mimetype = $finfo->buffer($binary);
+        if (!is_string($mimetype) || !file_mimetype_in_typegroup($mimetype, 'web_image')) {
+            throw new \moodle_exception($errorstring, 'filter_dixeo_imageeditor');
+        }
+
+        if ($mimetype === 'image/svg+xml') {
+            throw new \moodle_exception($errorstring, 'filter_dixeo_imageeditor');
+        }
+
+        if (@getimagesizefromstring($binary) === false) {
+            throw new \moodle_exception($errorstring, 'filter_dixeo_imageeditor');
+        }
+    }
+
+    /**
+     * Validate image bytes against Moodle web_image types and course upload limit.
      *
      * @param string $binary
      * @param int $courseid Course id for maxbytes check.
@@ -78,21 +111,7 @@ final class image_util {
             throw new \moodle_exception('uploadfilelimitexceeded', 'error');
         }
 
-        $finfo = new \finfo(FILEINFO_MIME_TYPE);
-        $mimetype = $finfo->buffer($binary);
-        if (!is_string($mimetype) || !file_mimetype_in_typegroup($mimetype, 'web_image')) {
-            throw new \moodle_exception($errorstring, 'filter_dixeo_imageeditor');
-        }
-
-        // SVG can embed scripts and is served inline; the edit capability only
-        // declares RISK_SPAM, so reject it as a stored-XSS vector.
-        if ($mimetype === 'image/svg+xml') {
-            throw new \moodle_exception($errorstring, 'filter_dixeo_imageeditor');
-        }
-
-        if (@getimagesizefromstring($binary) === false) {
-            throw new \moodle_exception($errorstring, 'filter_dixeo_imageeditor');
-        }
+        self::assert_valid_web_image_content($binary, $errorstring);
     }
 
     /**
