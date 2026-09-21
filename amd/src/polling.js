@@ -243,7 +243,8 @@ define([
             if (!(wrap instanceof HTMLElement)) {
                 return;
             }
-            if (wrap.dataset.dixeoPending !== '1') {
+            if (wrap.dataset.dixeoPending !== '1'
+                    && !wrap.querySelector('img.dixeo-img-gen-pending')) {
                 return;
             }
 
