@@ -22,8 +22,8 @@ use local_dixeo\service\image\content\capability;
 /**
  * Feature gate checks for the filter and its externals.
  *
- * Combines filter enabled config, {@see \local_dixeo\service\image\policy} modes, and Moodle caps
- * for editor UI (see also {@see \local_dixeo\service\image\content\capability} on externals).
+ * Combines the Moodle filter active state, {@see \local_dixeo\service\image\policy} modes, and
+ * Moodle caps for editor UI (see also {@see \local_dixeo\service\image\content\capability} on externals).
  *
  * @package    filter_dixeo_imageeditor
  * @copyright  2026 Dixeo
@@ -31,12 +31,14 @@ use local_dixeo\service\image\content\capability;
  */
 final class feature_gate {
     /**
-     * Whether the filter should run at all (excludes per-user caps).
+     * Whether the filter is not disabled site-wide on the Manage filters page.
+     *
+     * Off (but available) still returns true so a course can turn the filter on.
      *
      * @return bool
      */
     public static function is_globally_enabled(): bool {
-        return (bool) get_config('filter_dixeo_imageeditor', 'enabled');
+        return filter_is_enabled('dixeo_imageeditor');
     }
 
     /**

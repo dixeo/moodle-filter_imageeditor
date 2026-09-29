@@ -56,7 +56,7 @@ final class start_edit_test extends \advanced_testcase {
     public function setUp(): void {
         parent::setUp();
         $this->resetAfterTest(true);
-        set_config('enabled', 1, 'filter_dixeo_imageeditor');
+        filter_set_global_state('dixeo_imageeditor', TEXTFILTER_ON);
         set_config('image_generation_enabled', 1, 'local_dixeo');
         set_config('image_generation_content_mode', policy::MODE_GENERATE_EDIT, 'local_dixeo');
     }

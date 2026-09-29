@@ -40,15 +40,23 @@ final class feature_gate_test extends \advanced_testcase {
     }
 
     public function test_is_globally_enabled_when_filter_disabled(): void {
-        set_config('enabled', 0, 'filter_dixeo_imageeditor');
+        filter_set_global_state('dixeo_imageeditor', TEXTFILTER_DISABLED);
         set_config('image_generation_enabled', 1, 'local_dixeo');
         set_config('image_generation_content_mode', policy::MODE_GENERATE_EDIT, 'local_dixeo');
 
         $this->assertFalse(feature_gate::is_globally_enabled());
     }
 
+    public function test_is_globally_enabled_when_filter_off_but_available(): void {
+        filter_set_global_state('dixeo_imageeditor', TEXTFILTER_OFF);
+        set_config('image_generation_enabled', 1, 'local_dixeo');
+        set_config('image_generation_content_mode', policy::MODE_GENERATE_EDIT, 'local_dixeo');
+
+        $this->assertTrue(feature_gate::is_globally_enabled());
+    }
+
     public function test_is_globally_enabled_when_content_mode_disabled(): void {
-        set_config('enabled', 1, 'filter_dixeo_imageeditor');
+        filter_set_global_state('dixeo_imageeditor', TEXTFILTER_ON);
         set_config('image_generation_enabled', 1, 'local_dixeo');
         set_config('image_generation_content_mode', policy::MODE_DISABLED, 'local_dixeo');
 
@@ -56,7 +64,7 @@ final class feature_gate_test extends \advanced_testcase {
     }
 
     public function test_is_globally_enabled_when_global_dixeo_image_off(): void {
-        set_config('enabled', 1, 'filter_dixeo_imageeditor');
+        filter_set_global_state('dixeo_imageeditor', TEXTFILTER_ON);
         set_config('image_generation_enabled', 0, 'local_dixeo');
         set_config('image_generation_content_mode', policy::MODE_DISABLED, 'local_dixeo');
 
