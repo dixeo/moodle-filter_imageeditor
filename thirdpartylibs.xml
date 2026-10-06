@@ -1,10 +1,41 @@
 <?xml version="1.0"?>
 <libraries>
-    <library>
-        <location>thirdparty/cropperjs/cropper.js</location>
-        <name>cropperjs</name>
-        <version>1.6.2</version>
-        <license>MIT</license>
-        <licenseversion></licenseversion>
-    </library>
+  <library>
+    <location>thirdparty/cropperjs/cropper.js</location>
+    <name>Cropper.js</name>
+    <description>JavaScript image cropper.</description>
+    <version>1.6.2</version>
+    <license>MIT</license>
+    <licenseversion></licenseversion>
+    <repository>https://github.com/fengyuanchen/cropperjs</repository>
+    <copyrights>
+      <copyright>2015-present Chen Fengyuan</copyright>
+    </copyrights>
+  </library>
+  <library>
+    <location>amd/src/lib/cropper.js</location>
+    <name>Cropper.js</name>
+    <description>Moodle AMD wrapper around Cropper.js 1.6.2.</description>
+    <version>1.6.2</version>
+    <license>MIT</license>
+    <licenseversion></licenseversion>
+    <repository>https://github.com/fengyuanchen/cropperjs</repository>
+    <copyrights>
+      <copyright>2015-present Chen Fengyuan</copyright>
+    </copyrights>
+    <customised/>
+  </library>
+  <library>
+    <location>cropper.css</location>
+    <name>Cropper.js</name>
+    <description>Styles for Cropper.js 1.6.2. Selectors are scoped to the image editor modal.</description>
+    <version>1.6.2</version>
+    <license>MIT</license>
+    <licenseversion></licenseversion>
+    <repository>https://github.com/fengyuanchen/cropperjs</repository>
+    <copyrights>
+      <copyright>2015-present Chen Fengyuan</copyright>
+    </copyrights>
+    <customised/>
+  </library>
 </libraries>

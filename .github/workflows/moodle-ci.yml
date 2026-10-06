@@ -39,6 +39,28 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: plugin
+          fetch-depth: 0
+
+      - name: Resolve Dixeo sibling branch
+        id: dixeo_dep
+        working-directory: plugin
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "branch=${{ github.head_ref }}" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            git fetch origin release main development
+            BRANCH=""
+            for candidate in release main development; do
+              if git show-ref --verify --quiet "refs/remotes/origin/$candidate" \
+                && git merge-base --is-ancestor "${{ github.sha }}" "origin/$candidate"; then
+                BRANCH="$candidate"
+                break
+              fi
+            done
+            echo "branch=${BRANCH:-main}" >> "$GITHUB_OUTPUT"
+          else
+            echo "branch=${{ github.ref_name }}" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@v2
@@ -61,13 +83,11 @@ jobs:
       - name: Install moodle-plugin-ci
         run: |
           # Declared in version.php dependencies; required for caps, services, and PHPUnit mocks.
-          # Match Dixeo sibling branch: development/main/release → same on local_dixeo.
-          moodle-plugin-ci add-plugin --branch "$DIXEO_DEP_BRANCH" dixeo/moodle-local_dixeo
+          moodle-plugin-ci add-plugin --branch "${{ steps.dixeo_dep.outputs.branch }}" dixeo/moodle-local_dixeo
           moodle-plugin-ci install --plugin ./plugin --db-host=127.0.0.1
         env:
           DB: ${{ matrix.database }}
           MOODLE_BRANCH: ${{ matrix.moodle-branch }}
-          DIXEO_DEP_BRANCH: ${{ github.event_name == 'pull_request' && github.head_ref || github.ref_name }}
           # Uncomment this to run Behat tests using the Moodle App.
           # MOODLE_APP: 'true'
 
