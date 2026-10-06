@@ -22,6 +22,7 @@ use core_external\external_single_structure;
 use core_external\external_value;
 use filter_dixeo_imageeditor\adapter\feature_gate;
 use filter_dixeo_imageeditor\adapter\file_replacer;
+use filter_dixeo_imageeditor\adapter\tiles_section_photo;
 use filter_dixeo_imageeditor\event\content_image_job_started;
 use local_dixeo\dto\job_binding_metadata;
 use local_dixeo\repository\image\job_repository;
@@ -108,8 +109,13 @@ final class start_generate extends external_api {
         $quality = self::validate_image_quality($params['quality']);
 
         $file = $location->get_stored_file();
-        $title = image_generation_service::resolve_title_for_stored_file($file);
-        $binding = job_binding_metadata::for_stored_file($file);
+        if ($file) {
+            $title = image_generation_service::resolve_title_for_stored_file($file);
+            $binding = job_binding_metadata::for_stored_file($file);
+        } else {
+            $title = tiles_section_photo::section_title($location);
+            $binding = job_binding_metadata::for_course($location->courseid);
+        }
 
         $imageservice = service_factory::get_image_generation_service('filter_dixeo_imageeditor');
         $result = $imageservice->submit_content_image_generate_job(

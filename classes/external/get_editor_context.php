@@ -80,6 +80,7 @@ final class get_editor_context extends external_api {
         $policy = feature_gate::policy_flags();
         $caps = feature_gate::capability_flags($location->courseid);
         $status = job_repository::get_location_status($location, false);
+        $currentfile = $location->get_stored_file();
 
         $prefillprompt = '';
         $prefillquality = 'medium';
@@ -91,8 +92,8 @@ final class get_editor_context extends external_api {
         }
 
         return [
-            'imageurl' => file_replacer::get_current_image_url($location),
-            'current_contenthash' => file_replacer::get_current_contenthash($location),
+            'imageurl' => $currentfile ? file_replacer::get_current_image_url($location) : '',
+            'current_contenthash' => $currentfile ? $currentfile->get_contenthash() : '',
             'history' => file_replacer::get_history_for_location($location),
             'policy_can_generate' => $policy['can_generate'],
             'policy_can_edit' => $policy['can_edit'],
@@ -114,8 +115,8 @@ final class get_editor_context extends external_api {
      */
     public static function execute_returns(): external_single_structure {
         return new external_single_structure([
-            'imageurl' => new external_value(PARAM_URL, 'Current image URL'),
-            'current_contenthash' => new external_value(PARAM_ALPHANUMEXT, 'Current file contenthash'),
+            'imageurl' => new external_value(PARAM_RAW, 'Current image URL', VALUE_DEFAULT, ''),
+            'current_contenthash' => new external_value(PARAM_ALPHANUMEXT, 'Current file contenthash', VALUE_DEFAULT, ''),
             'history' => self::history_returns(),
             'policy_can_generate' => new external_value(PARAM_BOOL, 'Policy allows generate'),
             'policy_can_edit' => new external_value(PARAM_BOOL, 'Policy allows edit'),

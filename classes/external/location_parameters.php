@@ -69,7 +69,16 @@ trait location_parameters {
         $params = self::validate_parameters($definition, array_intersect_key($params, $definition->keys));
 
         $file = location::from_params($params)->get_stored_file();
-        if (!$file || !eligibility::is_eligible_stored_file($file)) {
+        if (!$file) {
+            $pending = \filter_dixeo_imageeditor\adapter\tiles_section_photo::pending_location($params);
+            if (!$pending) {
+                throw new \moodle_exception('error_not_eligible', 'filter_dixeo_imageeditor');
+            }
+            location_access::require_edit_access_for_course($pending->courseid);
+            self::validate_context(\context_course::instance($pending->courseid));
+            return $pending;
+        }
+        if (!eligibility::is_eligible_stored_file($file)) {
             throw new \moodle_exception('error_not_eligible', 'filter_dixeo_imageeditor');
         }
 

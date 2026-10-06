@@ -34,18 +34,56 @@ class text_filter extends \core_filters\text_filter {
     /** @var bool */
     private static bool $amdsloaded = false;
 
+    /** @var bool */
+    private static bool $tilesloaded = false;
+
     #[\Override]
     public function setup($page, $context): void {
-        if (self::$amdsloaded) {
-            return;
-        }
         if (!feature_gate::is_globally_enabled()) {
             return;
         }
-        $page->requires->js_call_amd('filter_dixeo_imageeditor/editor', 'init');
-        $page->requires->css('/filter/dixeo_imageeditor/styles.css');
-        $page->requires->css('/filter/dixeo_imageeditor/cropper.css');
-        self::$amdsloaded = true;
+        if (!self::$amdsloaded) {
+            $page->requires->js_call_amd('filter_dixeo_imageeditor/editor', 'init');
+            $page->requires->css('/filter/dixeo_imageeditor/styles.css');
+            $page->requires->css('/filter/dixeo_imageeditor/cropper.css');
+            self::$amdsloaded = true;
+        }
+        self::setup_tiles_course_page($page);
+    }
+
+    /**
+     * Add the image editor control on tiles course pages.
+     *
+     * Section photos are CSS backgrounds, and icon tiles have no file yet, so
+     * the text filter never sees them. The course page script opens the same
+     * modal for both.
+     *
+     * @param \moodle_page $page
+     * @return void
+     */
+    private static function setup_tiles_course_page(\moodle_page $page): void {
+        if (self::$tilesloaded) {
+            return;
+        }
+        if ($page->pagetype !== 'course-view-tiles') {
+            return;
+        }
+        $coursecontext = $page->context;
+        if (!$coursecontext instanceof \context_course) {
+            return;
+        }
+        if (!has_capability('filter/dixeo_imageeditor:edit', $coursecontext)) {
+            return;
+        }
+        if (!\filter_dixeo_imageeditor\adapter\tiles_section_photo::photos_allowed()) {
+            return;
+        }
+
+        $page->requires->js_call_amd('filter_dixeo_imageeditor/tiles_course', 'init', [[
+            'courseid' => (int) $coursecontext->instanceid,
+            'contextid' => (int) $coursecontext->id,
+        ]]);
+        self::$tilesloaded = true;
     }
 
     #[\Override]

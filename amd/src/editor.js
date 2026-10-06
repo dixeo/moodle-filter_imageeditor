@@ -589,6 +589,12 @@ const openEditor = (wrap) => {
             return;
         }
 
+        if (!context.current_contenthash) {
+            context.imageurl = '';
+            context.policy_can_edit = false;
+            context.cap_can_edit = false;
+        }
+
         const canGenerate = context.policy_can_generate && context.cap_can_generate;
         const canEdit = context.policy_can_edit && context.cap_can_edit;
 
@@ -1054,9 +1060,11 @@ function init() {
         if (!(wrap instanceof HTMLElement)) {
             return;
         }
+        // Capture phase so a tile link or section popup does not also open.
         event.preventDefault();
+        event.stopPropagation();
         openEditor(wrap);
-    });
+    }, true);
 
     polling.resumePendingOverlays(SELECTORS.wrap);
 }

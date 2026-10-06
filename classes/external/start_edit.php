@@ -108,6 +108,10 @@ final class start_edit extends external_api {
 
         $quality = self::validate_image_quality($params['quality']);
 
+        if (!$location->get_stored_file()) {
+            throw new \moodle_exception('error_not_eligible', 'filter_dixeo_imageeditor');
+        }
+
         $imageurl = $location->get_pluginfile_url();
         $b64 = pluginfile_helper::image_url_to_base64($imageurl);
 

@@ -168,6 +168,7 @@
                         data-action="manual-edit-start"
                         aria-label="{{#str}} manual_edit_start, filter_dixeo_imageeditor {{/str}}"
                         title="{{#str}} manual_edit_start, filter_dixeo_imageeditor {{/str}}"
+                        {{^imageurl}}hidden{{/imageurl}}
                     >
                         <i class="fa fa-pencil" aria-hidden="true"></i>
                     </button>
@@ -246,7 +247,7 @@
                     </div>
                 </div>
                 <div class="dixeo-imageeditor-modal__preview-stage" data-region="preview-stage">
-                    <img src="{{imageurl}}" alt="" class="dixeo-imageeditor-modal__image" data-region="preview-image">
+                    <img {{#imageurl}}src="{{imageurl}}"{{/imageurl}} alt="" class="dixeo-imageeditor-modal__image" data-region="preview-image" {{^imageurl}}hidden{{/imageurl}}>
                     <canvas class="dixeo-imageeditor-modal__canvas d-none" data-region="preview-canvas" aria-hidden="true"></canvas>
                 </div>
             </div>

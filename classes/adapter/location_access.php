@@ -56,4 +56,18 @@ final class location_access {
 
         return $courseid;
     }
+
+    /**
+     * Require login and filter edit capability for a course-scoped location.
+     *
+     * Used when a tiles section still shows an icon and has no photo file yet.
+     *
+     * @param int $courseid
+     * @return void
+     */
+    public static function require_edit_access_for_course(int $courseid): void {
+        $course = get_course($courseid);
+        require_login($course);
+        feature_gate::require_filter_edit($courseid);
+    }
 }

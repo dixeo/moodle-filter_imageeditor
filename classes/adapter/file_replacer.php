@@ -267,14 +267,18 @@ final class file_replacer {
      * @return void
      */
     public static function apply_binary(location $location, string $binary, int $userid, string $source): void {
-        $file = $location->get_stored_file();
-        if (!$file) {
-            throw new \moodle_exception('error_not_eligible', 'filter_dixeo_imageeditor');
-        }
-
         // AI job results skip the upload externals; validate here so every write
         // path rejects SVG and non-images before course files are replaced.
         image_util::assert_valid_web_image_content($binary);
+
+        $file = $location->get_stored_file();
+        if (!$file) {
+            // Icon tiles have no photo yet. The first image creates the file
+            // and records it as the section photo, which replaces the icon.
+            tiles_section_photo::create($location, $binary, $userid);
+            content_image_updated::create_from_location($location, $userid, $source)->trigger();
+            return;
+        }
 
         self::archive_current($location, $source, $userid);
         self::replace_file_content($file, $binary, $userid);

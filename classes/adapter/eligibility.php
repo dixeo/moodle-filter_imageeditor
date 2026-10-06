@@ -74,11 +74,19 @@ final class eligibility {
     /**
      * Whether the component and file area pair is denied.
      *
+     * Course overview files and Dixeo chapter covers stay excluded. Tiles
+     * section photos are the exception: the course page editor may upload,
+     * generate, and replace them, including when the tile still shows an icon.
+     *
      * @param string $component
      * @param string $filearea
      * @return bool True when the file must be excluded.
      */
     public static function is_denied_component_filearea(string $component, string $filearea): bool {
+        if ($component === 'format_tiles' && $filearea === 'tilephoto') {
+            return false;
+        }
+
         $denylist = [
             ['course', 'overviewfiles'],
             ['format_dixeo', 'chapterimage'],

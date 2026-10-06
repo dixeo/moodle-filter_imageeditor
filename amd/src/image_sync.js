@@ -74,6 +74,36 @@ define([], function() {
     };
 
     /**
+     * Paint a tiles section background after a photo is created or replaced.
+     *
+     * Icon tiles have no embedded img. The section list item is the surface.
+     *
+     * @param {HTMLElement} wrap
+     * @param {string} imageurl
+     * @param {string} contenthash
+     */
+    const paintTilesSection = (wrap, imageurl, contenthash) => {
+        if (wrap.dataset.tilesSection !== '1' || !imageurl) {
+            return;
+        }
+        const tile = wrap.closest('li.tile');
+        if (!(tile instanceof HTMLElement)) {
+            return;
+        }
+        const painted = appendImageRev(imageurl, contenthash);
+        tile.style.backgroundImage = 'url("' + painted.replace(/"/g, '') + '")';
+        tile.classList.add('phototile');
+        tile.querySelectorAll('.tileiconcontainer, .tile-bg').forEach((el) => {
+            el.setAttribute('hidden', 'hidden');
+        });
+        const path = painted.split('?')[0].split('/');
+        const filename = decodeURIComponent(path[path.length - 1] || '');
+        if (filename && filename !== '.') {
+            wrap.dataset.filename = filename;
+        }
+    };
+
+    /**
      * Update the embedded image src after a successful job.
      *
      * @param {HTMLElement} wrap
@@ -83,11 +113,15 @@ define([], function() {
      * @param {boolean} [options.failed=false] Keep/set the failed class instead of clearing it.
      */
     const applyImageToWrap = (wrap, imageurl, contenthash = '', options = {}) => {
+        const hash = contenthash || wrap.dataset.contenthash || '';
+        paintTilesSection(wrap, imageurl, hash);
+        if (hash) {
+            wrap.dataset.contenthash = hash;
+        }
         const img = wrap.querySelector('img');
         if (!(img instanceof HTMLImageElement) || !imageurl) {
             return;
         }
-        const hash = contenthash || wrap.dataset.contenthash || '';
         const failed = !!options.failed;
         img.src = appendImageRev(imageurl, hash);
         img.classList.remove('dixeo-img-gen-pending');
@@ -97,7 +131,6 @@ define([], function() {
             img.classList.remove('dixeo-img-gen-failed');
         }
         if (hash) {
-            wrap.dataset.contenthash = hash;
             img.setAttribute('data-dixeo-contenthash', hash);
         } else {
             img.removeAttribute('data-dixeo-contenthash');
@@ -115,7 +148,14 @@ define([], function() {
     const updatePreviewImage = (root, imageurl, contenthash = '') => {
         const previewImage = root.querySelector('[data-region="preview-image"]');
         if (previewImage instanceof HTMLImageElement && imageurl) {
+            previewImage.hidden = false;
+            previewImage.removeAttribute('hidden');
             previewImage.src = appendImageRev(imageurl, contenthash);
+        }
+        const manualStart = root.querySelector('[data-action="manual-edit-start"]');
+        if (manualStart instanceof HTMLElement && imageurl) {
+            manualStart.hidden = false;
+            manualStart.removeAttribute('hidden');
         }
     };
 

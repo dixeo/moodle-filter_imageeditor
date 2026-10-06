@@ -484,3 +484,38 @@
 .dixeo-imageeditor-modal__canvas {
     display: none;
 }
+
+.format-tiles li.tile > .dixeo-tiles-imageeditor {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.35rem;
+    z-index: 6;
+    display: block;
+    width: auto;
+    max-width: calc(100% - 0.7rem);
+}
+
+.format-tiles li.tile > .dixeo-tiles-imageeditor .dixeo-imageeditor-editbtn {
+    position: static;
+}
+
+.format-tiles li.tile > .dixeo-tiles-imageeditor.is-generating {
+    /* Cover the tile, including the colour bar drawn as a top border. */
+    top: -0.45em;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    width: auto;
+    max-width: none;
+}
+
+.format-tiles li.tile > .dixeo-tiles-imageeditor.is-generating .dixeo-imageeditor-editbtn {
+    position: absolute;
+    top: 0.35rem;
+    right: 0.35rem;
+}
+
+.format-tiles li.tile:hover > .dixeo-tiles-imageeditor .dixeo-imageeditor-editbtn,
+.format-tiles li.tile:focus-within > .dixeo-tiles-imageeditor .dixeo-imageeditor-editbtn {
+    opacity: 1;
+}

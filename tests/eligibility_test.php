@@ -46,6 +46,10 @@ final class eligibility_test extends \advanced_testcase {
         $this->assertTrue(eligibility::is_denied_component_filearea('format_dixeo', 'chapterimage'));
     }
 
+    public function test_tiles_section_photo_is_allowed(): void {
+        $this->assertFalse(eligibility::is_denied_component_filearea('format_tiles', 'tilephoto'));
+    }
+
     public function test_designer_generated_images_is_denied(): void {
         $this->assertTrue(eligibility::is_denied_component_filearea('block_dixeo_designer', 'generated_images'));
     }
