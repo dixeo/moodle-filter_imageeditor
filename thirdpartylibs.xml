@@ -3,7 +3,7 @@
   <library>
     <location>thirdparty/cropperjs/cropper.js</location>
     <name>Cropper.js</name>
-    <description>JavaScript image cropper.</description>
+    <description>JavaScript image cropper. The AMD module amd/src/lib/cropper.js is this library wrapped in define().</description>
     <version>1.6.2</version>
     <license>MIT</license>
     <licenseversion></licenseversion>
@@ -11,19 +11,6 @@
     <copyrights>
       <copyright>2015-present Chen Fengyuan</copyright>
     </copyrights>
-  </library>
-  <library>
-    <location>amd/src/lib/cropper.js</location>
-    <name>Cropper.js</name>
-    <description>Moodle AMD wrapper around Cropper.js 1.6.2.</description>
-    <version>1.6.2</version>
-    <license>MIT</license>
-    <licenseversion></licenseversion>
-    <repository>https://github.com/fengyuanchen/cropperjs</repository>
-    <copyrights>
-      <copyright>2015-present Chen Fengyuan</copyright>
-    </copyrights>
-    <customised/>
   </library>
   <library>
     <location>cropper.css</location>

@@ -61,7 +61,7 @@ final class file_replacer {
         $history = [];
         foreach ($records as $record) {
             // Never expose placeholder/error stubs even if they were archived earlier.
-            if (asset_helper::is_status_asset_hash((string) $record->contenthash)) {
+            if (self::is_status_asset_hash((string) $record->contenthash)) {
                 continue;
             }
             $history[] = self::format_version_record($record, $location);
@@ -182,6 +182,20 @@ final class file_replacer {
     }
 
     /**
+     * Whether a contenthash is the pending placeholder or the failure image.
+     *
+     * @param string $contenthash
+     * @return bool
+     */
+    public static function is_status_asset_hash(string $contenthash): bool {
+        if ($contenthash === '') {
+            return false;
+        }
+        return $contenthash === sha1(asset_helper::get_placeholder_binary())
+            || $contenthash === sha1(asset_helper::get_error_binary());
+    }
+
+    /**
      * Archive the current file bytes into version history.
      *
      * @param location $location
@@ -199,7 +213,7 @@ final class file_replacer {
 
         $contenthash = $file->get_contenthash();
         // Pending/failure stubs must not enter version history (e.g. retry after error.png).
-        if (asset_helper::is_status_asset_hash($contenthash)) {
+        if (self::is_status_asset_hash($contenthash)) {
             return null;
         }
         if (self::has_history_contenthash($location, $contenthash)) {

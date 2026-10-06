@@ -429,7 +429,7 @@ final class file_replacer_test extends \advanced_testcase {
 
         $errorhash = $location->get_stored_file()->get_contenthash();
         $this->assertTrue(
-            \local_dixeo\service\image\content\asset_helper::is_status_asset_hash($errorhash)
+            file_replacer::is_status_asset_hash($errorhash)
         );
 
         file_replacer::apply_binary(
